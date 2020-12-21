@@ -1,0 +1,63 @@
+﻿@page "/add"
+
+@using MediatR
+@using PoC.Studies.Core.Commands
+@using Microsoft.Extensions.Logging
+
+@implements IDisposable
+
+@inject IMediator mediatr;
+@inject ILogger<FetchData> logger
+@inject NavigationManager navMngr
+
+<h3>Add</h3>
+
+<EditForm Model="@todo">
+    <div class="form-group">
+        <label>Title:</label>
+        <div>
+            <InputText @bind-Value="@todo.Title" class="form-control col-sm-3" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Description:</label>
+        <div>
+            <textarea name="description" id="description" @oninput="OnInput"></textarea>
+        </div>
+    </div>
+</EditForm>
+
+<button class="btn btn-primary" @onclick="AddTodo">Add</button>
+
+@code {
+    private AddTodo todo = new AddTodo();
+
+    private async Task AddTodo()
+    {
+        await mediatr.Send(todo);
+        navMngr.NavigateTo("fetchData");
+    }
+
+    private async Task OnInput(ChangeEventArgs args)
+    {
+        todo.Description = args.Value.ToString();
+        await Task.CompletedTask;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        navMngr.LocationChanged += LocationChangedHandler;
+
+        await Task.CompletedTask;
+    }
+
+    private void LocationChangedHandler(object sender, LocationChangedEventArgs e)
+    {
+        logger.LogInformation("Location changed. New location: {Location}", e.Location);
+    }
+
+    public void Dispose()
+    {
+        navMngr.LocationChanged -= LocationChangedHandler;
+    }
+}

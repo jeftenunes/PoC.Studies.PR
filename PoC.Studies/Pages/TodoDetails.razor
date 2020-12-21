@@ -1,0 +1,60 @@
+﻿@page "/details/{id}"
+
+
+@using MediatR
+@using PoC.Studies.Core.Domain
+@using PoC.Studies.Core.Queries
+@using Microsoft.Extensions.Logging
+
+@implements IDisposable
+@inject IMediator mediatr;
+@inject ILogger<FetchData> logger
+@inject NavigationManager navMngr
+
+<h3>Details</h3>
+
+<div class="row justify content center m.3">
+    <div class="col-sm-8">
+        <div class="card">
+            @if (details != null)
+            {
+                <div class="card-header">
+                    <h1>@details.Title</h1>
+                </div>
+                <div class="card-body text-center">
+                    <h4>Todo ID : @details.Id</h4>
+                    <h4>Description : @details.Description</h4>
+                </div>
+                <div class="card-footer text-center">
+                    <a class="btn btn-primary" href="/">Back</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private Todo details;
+
+    protected override async Task OnInitializedAsync()
+    {
+        navMngr.LocationChanged += LocationChangedHandler;
+
+        details = await mediatr.Send(new FindByIdQuery { Id = int.Parse(Id) });
+        await Task.CompletedTask;
+    }
+
+
+    private void LocationChangedHandler(object sender, LocationChangedEventArgs e)
+    {
+        logger.LogInformation("Location changed. New location: {Location}", e.Location);
+    }
+
+    public void Dispose()
+    {
+        navMngr.LocationChanged -= LocationChangedHandler;
+    }
+}

@@ -1,0 +1,76 @@
+﻿@page "/"
+@page "/fetchdata"
+
+@using MediatR
+@using PoC.Studies.Core.Domain
+@using PoC.Studies.Core.Queries
+@using Microsoft.Extensions.Logging
+
+@implements IDisposable
+@inject IMediator mediatr;
+@inject ILogger<FetchData> logger
+@inject NavigationManager navMngr
+
+<div class="row"></div>
+
+
+@if (todos == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Title</th>
+                <th>Descriptions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var todo in todos)
+            {
+                <tr>
+                    <td><a href="/details/@todo.Id">@todo.Id</a></td>
+                    <td>@todo.Title</td>
+                    <td>@todo.Description</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="row">
+        <div class="col-12">
+            <button class="btn btn-primary" @onclick="GoToAddPage">Add</button>
+        </div>
+    </div>
+
+}
+
+@code {
+    private List<Todo> todos = new List<Todo>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        navMngr.LocationChanged += LocationChangedHandler;
+
+        todos = (await mediatr.Send(new FindAllQuery())).ToList();
+        await Task.CompletedTask;
+    }
+
+    private void GoToAddPage()
+    {
+        navMngr.NavigateTo("add");
+    }
+
+    private void LocationChangedHandler(object sender, LocationChangedEventArgs e)
+    {
+        logger.LogInformation("Location changed. New location: {Location}", e.Location);
+    }
+
+    public void Dispose()
+    {
+        navMngr.LocationChanged -= LocationChangedHandler;
+    }
+}
